@@ -24,9 +24,9 @@ Należy zaimplementować klasę Fibo reprezentującą liczby zapisane w systemie
 Fibonacciego. Niech f1, f2 będą obiektami klasy Fibo. Powinny być dostępne
 następujące operacje:
 
-#Fibo f1      - tworzy liczbę 0
+# Fibo f1      - tworzy liczbę 0
 
-#Fibo f1(str) - tworzy liczbę na podstawie napisu str, który jest zapisem tej
+# Fibo f1(str) - tworzy liczbę na podstawie napisu str, który jest zapisem tej
                liczby w systemie Fibonacciego (zapis niekoniecznie musi być
                w postaci unormowanej)
 
@@ -34,7 +34,7 @@ Fibo(n)      - tworzy liczbę równą liczbie całkowitej n
 
 Fibo f1(f2)  - konstruktor kopiujący
 
-#f1 = f2 - przypisanie
+# f1 = f2 - przypisanie
 
 f1 + f2 - dodawanie
 
@@ -59,7 +59,7 @@ f1 <<= n
 f1 op f2 - operatory porównujące wartości liczbowe reprezentowane przez f1 i f2,
            gdzie op to jeden z operatorów: ==, <, <=, != , >, >=
 
-os << f1 - wypisuje f1 na strumień os bez żadnych białych znaków w postaci
+# os << f1 - wypisuje f1 na strumień os bez żadnych białych znaków w postaci
            unormowanej
 
 f1.length() - zwraca długość zapisu w postaci unormowanej liczby f1
