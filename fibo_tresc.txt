@@ -32,11 +32,11 @@ następujące operacje:
 
 Fibo(n)      - tworzy liczbę równą liczbie całkowitej n
 
-Fibo f1(f2)  - konstruktor kopiujący
+# Fibo f1(f2)  - konstruktor kopiujący
 
 # f1 = f2 - przypisanie
 
-f1 + f2 - dodawanie
+# f1 + f2 - dodawanie
 
 f1 & f2 - and fibitowy (na postaci unormowanej)
 
@@ -46,7 +46,7 @@ f1 ^ f2 - xor fibitowy (na postaci unormowanej)
 
 f1 << n  - przesunięcie fibitowe w lewo o n pozycji
 
-f1 += f2
+# f1 += f2
 
 f1 &= f2
 
