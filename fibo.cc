@@ -14,32 +14,9 @@ private:
     // otherwise, normalized, Fibonacci-based number
     // 0th bit = 1, 1st = 2, 2nd = 3, 3rd = 5, etc.
     fibitset _bits;
-    unsigned int _shift;
-
-    static void normalize(fibitset& bits) {
-        // couples fibits with their neighbors, 
-        // starting with the most significant ones
-        
-        // maintaining: no bit, starting with the i-th, has a neighbor
-        for(size_t j = bits.size(), i = bits.size(); i > 1; --i, j = i) {
-            // maintaining: j > 1, propagating the couplings
-            while(j < bits.size() && bits[j-1] && bits[j-2]) {
-                bits[j] = 1;
-                bits[j-1] = 0;
-                bits[j-2] = 0;
-                j += 2;
-            }
-            if(j == bits.size() && bits[j-1] && bits[j-2]) {
-                bits.push_back(1);
-                bits[j-1] = 0;
-                bits[j-2] = 0;
-            }
-        }
-    }
     
-    // NOTE: maybe can be used for 'static void normalize'
     // pushes right if and only if the byte [pos] and the byte [pos+1] are both true
-    void push_pairs_right(size_t pos) {
+    inline void push_pairs_right(size_t pos) {
         while(pos + 1 < _bits.size() && _bits[pos] && _bits[pos+1]) {
             _bits[pos] = 0;
             _bits[pos+1] = 0;
@@ -55,7 +32,7 @@ private:
     
     // NOTE: may require restructurization
     // maintains naturalization
-    void add_bit(size_t pos) {
+    inline void add_bit(size_t pos) {
         if(pos >= _bits.size())
             _bits.resize(pos + 1, 0);
         
@@ -101,9 +78,8 @@ public:
         _bits.resize(size);
         
         for(size_t i = 0; i < size; ++i)
-            _bits[i] = str[size - 1 - i] - '0';
-        
-        normalize(_bits);
+            if(str[size - 1 - i] == '1') 
+                add_bit(i);
     }
     
     Fibo(const Fibo& that) : _bits(that._bits) {}
@@ -136,7 +112,34 @@ public:
         
         return equal(this->_bits.begin(), this->_bits.end(), that._bits.begin());
     }
+    
+    bool operator<(const Fibo& that) const {
+        if (this == &that) return false;
 
+        if (this->_bits.size() < that._bits.size()) return true;
+        
+        auto diff = mismatch(this->_bits.rbegin(), // a pair of iterators
+                             this->_bits.rend(), 
+                             that._bits.rbegin());
+            
+        if(diff.first == this->_bits.rend()) return false;
+        
+        // this < that if and only if they differ 
+        // where 'that' has a 1 and 'this' has a 0
+        return(*(diff.second)); 
+    }
+    bool operator>(const Fibo& that) const {
+        return that < *this;
+    }
+    bool operator<=(const Fibo& that) const {
+        return !(that > *this);
+    }
+    bool operator>=(const Fibo& that) const {
+        return !(that < *this);
+    }
+    bool operator!=(const Fibo& that) const {
+        return !(that == *this);
+    }
 private:
     friend ostream& operator<<(ostream& os, const Fibo& fib) {
         for(auto i = fib._bits.rbegin(); i != fib._bits.rend(); ++i)
@@ -145,6 +148,12 @@ private:
         return os;
     }
 };
+
+const Fibo& Zero() {
+    static Fibo zero("0");
+    
+    return zero;
+}
 
 #include <cassert>
 
@@ -171,7 +180,6 @@ int main() {
     
     assert(Fibo("11") == Fibo("100"));
     assert((Fibo("1001") + Fibo("10")) == Fibo("1011"));
-    
     
     
     return 0;

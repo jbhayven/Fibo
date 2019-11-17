@@ -56,7 +56,7 @@ f1 ^= f2
 
 f1 <<= n
 
-f1 op f2 - operatory porównujące wartości liczbowe reprezentowane przez f1 i f2,
+# f1 op f2 - operatory porównujące wartości liczbowe reprezentowane przez f1 i f2,
            gdzie op to jeden z operatorów: ==, <, <=, != , >, >=
 
 # os << f1 - wypisuje f1 na strumień os bez żadnych białych znaków w postaci
@@ -66,7 +66,7 @@ f1.length() - zwraca długość zapisu w postaci unormowanej liczby f1
 
 Ponadto należy zaimplementować globalne funkcje:
 
-Zero() - zwraca obiekt reprezentujący liczbę 0
+# Zero() - zwraca obiekt reprezentujący liczbę 0
 
 One()  - zwraca obiekt reprezentujący liczbę 1
 
