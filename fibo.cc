@@ -15,7 +15,11 @@ private:
     // 0th bit = 1, 1st = 2, 2nd = 3, 3rd = 5, etc.
     fibitset _bits;
     
-    // pushes right if and only if the byte [pos] and the byte [pos+1] are both true
+    // pushes right (i.e. exchanges a pair of consecutive bits for one greater)
+    // if and only if the byte [pos] and the byte [pos+1] are both true,
+    // based on the fact that F(i) + F(i+1) = F(i+2)
+    // Requires that all the bits to the right from such a pair already satisfy
+    // the invariant of normalization
     inline void push_pairs_right(size_t pos) {
         while(pos + 1 < _bits.size() && _bits[pos] && _bits[pos+1]) {
             _bits[pos] = 0;
