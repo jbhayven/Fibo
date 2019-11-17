@@ -14,6 +14,7 @@ private:
     // otherwise, normalized, Fibonacci-based number
     // 0th bit = 1, 1st = 2, 2nd = 3, 3rd = 5, etc.
     fibitset _bits;
+    unsigned int _shift;
 
     static void normalize(fibitset& bits) {
         // couples fibits with their neighbors, 
@@ -37,6 +38,7 @@ private:
     }
     
     // NOTE: maybe can be used for 'static void normalize'
+    // pushes right if and only if the byte [pos] and the byte [pos+1] are both true
     void push_pairs_right(size_t pos) {
         while(pos + 1 < _bits.size() && _bits[pos] && _bits[pos+1]) {
             _bits[pos] = 0;
@@ -57,8 +59,18 @@ private:
         if(pos >= _bits.size())
             _bits.resize(pos + 1, 0);
         
-        if(_bits[pos]) {
+        while(_bits[pos]) {
             // the bit is already taken
+            
+            // in both cases F(pos + 1) is added
+            if(pos + 1 < _bits.size()) {
+                _bits[pos + 1] = true;
+                push_pairs_right(pos + 1);
+            }
+            else {
+                _bits.push_back(true);
+            }
+            
             if(pos == 0) {
                 // F(2) + F(2) = F(1) + F(2) = F(3)
                 _bits[pos] = 0;
@@ -67,21 +79,17 @@ private:
                 // F(i) + F(i) = F(i-2) + F(i-1) + F(i) = F(i-2) + F(i+1)
                 _bits[pos] = 0;
                 if(pos == 1) 
-                    add_bit(0);
+                    pos = 0;
                 else 
-                    add_bit(pos-2);
+                    pos -= 2;
             }
-            
-            // in both cases F(pos+1) can initially be set as true
-            add_bit(pos+1);
         }
-        else {
-            _bits[pos] = 1;
-            push_pairs_right(pos);
+        
+        _bits[pos] = 1;
+        push_pairs_right(pos);
             
-            if(pos > 0)
-                push_pairs_right(pos-1);
-        }
+        if(pos > 0)
+            push_pairs_right(pos-1);
     } 
     
 public:
