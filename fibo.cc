@@ -74,8 +74,7 @@ private:
     } 
     
     //generate Fibonacci sequence
-    inline std::vector<unsigned long long>
-            get_sequence(const unsigned long long& number) {
+    std::vector<unsigned long long> get_sequence(const unsigned long long& number) {
         std::vector<unsigned long long> fibo_sequence;
     	fibo_sequence.push_back(1);
         fibo_sequence.push_back(2);
@@ -117,8 +116,7 @@ public:
                 && !std::is_same<bool, Number>::value>::type>
 
     Fibo(Number number) : _bits() {
-    	if(number < 0)
-    		throw std::invalid_argument("Negative number");
+    	if(number < 0) throw std::invalid_argument("Negative number");
 
         std::vector<unsigned long long> fibo_sequence
 		    = get_sequence(number);
@@ -273,6 +271,18 @@ private:
         
         return os;
     }
+    
+    template<typename Number,
+             typename = typename std::enable_if<
+                std::is_integral<Number>::value
+                && !std::is_same<char, Number>::value
+                && !std::is_same<bool, Number>::value>::type>
+    friend Number operator<(Number n, const Fibo& fib) { return fib > n; }
+    friend Number operator>(Number n, const Fibo& fib) { return fib < n; }
+    friend Number operator<=(Number n, const Fibo& fib) { return fib >= n; }
+    friend Number operator>=(Number n, const Fibo& fib) { return fib <= n; }
+    friend Number operator==(Number n, const Fibo& fib) { return fib == n; }
+    friend Number operator!=(Number n, const Fibo& fib) { return fib != n; }
 };
 
 const Fibo& Zero() {
@@ -312,8 +322,6 @@ int main() {
 
     assert((Fibo("11") == Fibo("100")));
     assert(((Fibo("1001") + Fibo("10")) == Fibo("1011")));
-
-    bool b = true;
     
     //Fibo f3(true);
     //Fibo f4('a');
