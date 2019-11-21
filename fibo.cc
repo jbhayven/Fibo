@@ -25,8 +25,8 @@ private:
             bits_[pos] = false;
             bits_[pos+1] = false;
             
-            pos += 2; // now [pos] correcponds to the position 
-                      // where the bit is to be added
+            pos += 2; // Now [pos] correcponds to the position 
+                      // where the bit is to be added.
             
             if(pos < bits_.size()) 
                 bits_[pos] = true;
@@ -60,7 +60,7 @@ private:
                 bits_.push_back(true);
             }
             
-            // ... and an additional bit is added, with respect to the three possible cases
+            // ... and an additional bit is added, with respect to the three possible cases.
             if(pos == 0)
                 return; // 1 + 1 = 2, that's it
             if(pos == 1)
@@ -77,7 +77,7 @@ private:
             push_pairs_right(pos - 1);
     } 
     
-    //generate Fibonacci sequence
+    // Generates Fibonacci sequence.
     std::vector<unsigned long long> get_sequence(unsigned long long number) {
         std::vector<unsigned long long> fibo_sequence;
         fibo_sequence.push_back(1);
@@ -112,7 +112,7 @@ public:
         
         bits_.resize(size);
         
-         // filling the bits in the reverse order
+         // Filling the bits in the reverse order.
         for(size_t i = 0; i < size; ++i)
             bits_[i] = (str[i] == '1');
             
@@ -245,7 +245,7 @@ private:
 
         if (a.bits_.size() < b.bits_.size()) return true;
             
-        auto diff = mismatch(a.bits_.rbegin(), // a pair of iterators
+        auto diff = mismatch(a.bits_.rbegin(), // A pair of iterators.
                                 a.bits_.rend(), 
                                 b.bits_.rbegin());
                 
