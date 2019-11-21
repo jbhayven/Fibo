@@ -11,62 +11,66 @@ class Fibo {
     
 private: 
     
-    // otherwise, normalized, Fibonacci-based number
+    // Normalized, Fibonacci-based number.
     // 0th bit = 1, 1st = 2, 2nd = 3, 3rd = 5, etc.
-    fibitset _bits;
+    fibitset bits_;
     
-    // pushes right (i.e. exchanges a pair of consecutive bits for one greater)
+    // Pushes right (i.e. exchanges a pair of consecutive bits for one greater)
     // if and only if the byte [pos] and the byte [pos+1] are both true,
-    // based on the fact that F(i) + F(i+1) = F(i+2)
+    // based on the fact that F(i) + F(i+1) = F(i+2).
     // Requires that all the bits to the right from such a pair already satisfy
-    // the invariant of normalization
+    // the invariant of normalization.
     void push_pairs_right(size_t pos) {
-        while(pos + 1 < _bits.size() && _bits[pos] && _bits[pos+1]) {
-            _bits[pos] = 0;
-            _bits[pos+1] = 0;
+        while(pos + 1 < bits_.size() && bits_[pos] && bits_[pos+1]) {
+            bits_[pos] = false;
+            bits_[pos+1] = false;
             
-            pos += 2;
+            pos += 2; // now [pos] correcponds to the position 
+                      // where the bit is to be added
             
-            if(pos < _bits.size()) 
-                _bits[pos] = 1;
+            if(pos < bits_.size()) 
+                bits_[pos] = true;
             else
-                _bits.push_back(1);
+                bits_.push_back(true);
         }
     }
+
+    void normalize() {
+        for(size_t i = bits_.size(); i > 0; --i)
+            push_pairs_right(i-1);
+    }
     
-    // NOTE: may require restructurization
-    // maintains naturalization
+    // Maintains naturalization.
     void add_bit(size_t pos) {
-        if(pos >= _bits.size())
-            _bits.resize(pos + 1, 0);
+        if(pos >= bits_.size())
+            bits_.resize(pos + 1, 0);
         
-        while(_bits[pos]) {
-            // the bit is already taken
+        while(bits_[pos]) {
+            // The bit is already taken.
             
-            // in both cases F(pos + 1) is added
-            if(pos + 1 < _bits.size()) {
-                _bits[pos + 1] = true;
+            // The bit at [pos] removed...
+            bits_[pos] = false;
+            
+            // ... F(pos + 1) is added...
+            if(pos + 1 < bits_.size()) {
+                bits_[pos + 1] = true;
                 push_pairs_right(pos + 1);
             }
             else {
-                _bits.push_back(true);
+                bits_.push_back(true);
             }
             
-            if(pos == 0) {
-                // F(2) + F(2) = F(1) + F(2) = F(3)
-                _bits[pos] = 0;
-            }
-            else {
-                // F(i) + F(i) = F(i-2) + F(i-1) + F(i) = F(i-2) + F(i+1)
-                _bits[pos] = 0;
-                if(pos == 1) 
-                    pos = 0;
-                else 
-                    pos -= 2;
-            }
+            // ... and an additional bit is added, with respect to the three possible cases
+            if(pos == 0)
+                return; // 1 + 1 = 2, that's it
+            if(pos == 1)
+                pos = 0; // 2 + 2 = (1 + 3), so we need to add 1
+            else  
+                pos -= 2; // F(i) + F(i) = F(i-2) + F(i+1), so we need to add F(i-2) 
         }
         
-        _bits[pos] = 1;
+        // The bit at [pos] is free so we can set it to 1.
+        bits_[pos] = true;
         push_pairs_right(pos);
             
         if(pos > 0)
@@ -74,13 +78,13 @@ private:
     } 
     
     //generate Fibonacci sequence
-    std::vector<unsigned long long> get_sequence(const unsigned long long& number) {
+    std::vector<unsigned long long> get_sequence(unsigned long long number) {
         std::vector<unsigned long long> fibo_sequence;
-    	fibo_sequence.push_back(1);
+        fibo_sequence.push_back(1);
         fibo_sequence.push_back(2);
 
-        while(fibo_sequence.end()[-1] <= number && fibo_sequence.end()[-1] > 0) {
-           	fibo_sequence
+        while(number - fibo_sequence.end()[-1] >= fibo_sequence.end()[-2]) {
+            fibo_sequence
                 .push_back(fibo_sequence.end()[-1] + fibo_sequence.end()[-2]);
         }
 
@@ -88,25 +92,33 @@ private:
     }
 
     void remove_leading_zeros() {
-    	size_t i = _bits.size() - 1;
+        size_t i = bits_.size() - 1;
 
-    	while(_bits[i] == 0 && i > 0)
-    		--i;
+        while(bits_[i] == 0 && i > 0)
+            --i;
 
-    	_bits.resize(i + 1);
+        bits_.resize(i + 1);
     }
 
 public:
-    Fibo() : _bits({0}) {}
+    Fibo() : bits_({0}) {}
     
-    Fibo(const std::string& str) : _bits() {
+    Fibo(const std::string& str) : bits_() {
         size_t size = str.size();
         
-        _bits.resize(size);
+        for(size_t i = 0; i < size; ++i) 
+            if(str[i] != '0' && str[i] != '1')
+                throw std::invalid_argument("Negative number");
         
+        bits_.resize(size);
+        
+         // filling the bits in the reverse order
         for(size_t i = 0; i < size; ++i)
-            if(str[size - 1 - i] == '1') 
-                add_bit(i);
+            bits_[i] = (str[i] == '1');
+            
+        std::reverse(bits_.begin(), bits_.end());
+            
+        normalize();
     }
     
     template<typename Number,
@@ -115,174 +127,134 @@ public:
                 && !std::is_same<char, Number>::value
                 && !std::is_same<bool, Number>::value>::type>
 
-    Fibo(Number number) : _bits() {
-    	if(number < 0) throw std::invalid_argument("Negative number");
-
-        std::vector<unsigned long long> fibo_sequence
-		    = get_sequence(number);
+    Fibo(Number n) : bits_() {
+        if(n < 0) throw std::invalid_argument("Negative number");
+        unsigned long long number = n;
+        
+        std::vector<unsigned long long> fibo_sequence = get_sequence(number);
 
         size_t size = fibo_sequence.size();
-        _bits.resize(size - 1);
+        bits_.resize(size);
 
         for(size_t i = 0; i < size; ++i) {
-        	if(fibo_sequence[size - i - 1] <= number) {
+            if(fibo_sequence[size - i - 1] <= number) {
                 number -= fibo_sequence[size - i - 1];
-                _bits[size - i - 1] = true;
-        	}
-        	else {
-        		_bits[size - i - 1] = false;
-        	}
+                bits_[size - i - 1] = true;
+            }
+            else {
+                bits_[size - i - 1] = false;
+            }
         }
     }
 
-    Fibo(const Fibo& that) : _bits(that._bits) {}
+    Fibo(const Fibo& that) : bits_(that.bits_) {}
     
-    size_t length() {
-     	return _bits.size();
+    size_t length() const {
+        return bits_.size();
      }
 
     Fibo& operator+=(const Fibo& that) {
-        size_t size = that._bits.size();
+        size_t size = that.bits_.size();
         
         for(size_t i = 0; i < size; ++i)
-            if(that._bits[i])
+            if(that.bits_[i])
                 this->add_bit(i);
 
         return *this;
-    }
-    
-    const Fibo operator+(const Fibo& that) const {
-        return Fibo(*this) += that;
     }
 
     Fibo& operator&=(const Fibo& that) {
-    	size_t size = that._bits.size();
-    	if(size > _bits.size())
-    	    _bits.resize(size);
-
-    	for(size_t i = 0; i < size; ++i)
-    		if(!that._bits[i] || !_bits[i])
-    			_bits[i] = 0;
-
-    	remove_leading_zeros();
-
-    	return *this;
-    }
-
-    const Fibo operator&(const Fibo& that) const {
-    	return Fibo(*this) &= that;
-    }
-
-    Fibo& operator|=(const Fibo& that) {
-        size_t size = that._bits.size();
+        size_t size = that.bits_.size();
+        if(size > bits_.size())
+            bits_.resize(size);
 
         for(size_t i = 0; i < size; ++i)
-            if(that._bits[i] && !_bits[i])
-                this->add_bit(i);
+            bits_[i] = bits_[i] && that.bits_[i];
+
+        remove_leading_zeros();
 
         return *this;
     }
 
-    const Fibo operator|(const Fibo& that) const {
-    	return Fibo(*this) |= that;
+    Fibo& operator|=(const Fibo& that) {
+        size_t size = that.bits_.size();
+        if(size > bits_.size())
+            bits_.resize(size);
+
+        for(size_t i = 0; i < size; ++i)
+                bits_[i] = bits_[i] || that.bits_[i];
+
+        normalize();
+
+        return *this;
     }
 
     Fibo& operator^=(const Fibo& that) {
-    	size_t size = that._bits.size();
-    	if(size > _bits.size())
-    	    _bits.resize(size);
+        size_t size = that.bits_.size();
+        if(size > bits_.size())
+            bits_.resize(size);
 
-    	for(size_t i = 0; i < size; ++i)
-    		if(that._bits[i] && !_bits[i])
-    			this->add_bit(i);
-    		else if(that._bits[i] && _bits[i])
-    			_bits[i] = 0;
+        for(size_t i = 0; i < size; ++i)
+            bits_[i] = bits_[i] != that.bits_[i];
 
-    	remove_leading_zeros();
+        normalize();
+        remove_leading_zeros();
 
-    	return *this;
-    }
-
-    const Fibo operator^(const Fibo& that) const {
-    	return Fibo(*this) ^= that;
+        return *this;
     }
 
     Fibo& operator<<=(const size_t& n) {
-    	if(n == 0)
-    		return *this;
+        if(n == 0)
+            return *this;
 
-    	_bits.resize(_bits.size() + n);
-    	std::rotate(_bits.begin(), _bits.end() - n, _bits.end());
+        bits_.resize(bits_.size() + n);
+        std::rotate(bits_.begin(), bits_.end() - n, bits_.end());
 
-    	return *this;
+        return *this;
     }
 
     const Fibo operator<<(const size_t& n) {
-    	return Fibo(*this) <<= n;
+        return Fibo(*this) <<= n;
     }
 
     Fibo& operator=(const Fibo& that) {
         if (this != &that)
-          _bits = that._bits;
+          bits_ = that.bits_;
 
         return *this;
     }
     
-    bool operator==(const Fibo& that) const {
-        if (this == &that) return true;
-
-        if (this->_bits.size() != that._bits.size()) return false;
-        
-        return equal(this->_bits.begin(), this->_bits.end(), that._bits.begin());
-    }
-    
-    bool operator<(const Fibo& that) const {
-        if (this == &that) return false;
-
-        if (this->_bits.size() < that._bits.size()) return true;
-        
-        auto diff = mismatch(this->_bits.rbegin(), // a pair of iterators
-                             this->_bits.rend(), 
-                             that._bits.rbegin());
-            
-        if(diff.first == this->_bits.rend()) return false;
-        
-        // this < that if and only if they differ 
-        // where 'that' has a 1 and 'this' has a 0
-        return(*(diff.second)); 
-    }
-    bool operator>(const Fibo& that) const {
-        return that < *this;
-    }
-    bool operator<=(const Fibo& that) const {
-        return !(that > *this);
-    }
-    bool operator>=(const Fibo& that) const {
-        return !(that < *this);
-    }
-    bool operator!=(const Fibo& that) const {
-        return !(that == *this);
-    }
-
 private:
     friend ostream& operator<<(ostream& os, const Fibo& fib) {
-        for(auto i = fib._bits.rbegin(); i != fib._bits.rend(); ++i)
+        for(auto i = fib.bits_.rbegin(); i != fib.bits_.rend(); ++i)
             os << (*i);
         
         return os;
     }
     
-    template<typename Number,
-             typename = typename std::enable_if<
-                std::is_integral<Number>::value
-                && !std::is_same<char, Number>::value
-                && !std::is_same<bool, Number>::value>::type>
-    friend Number operator<(Number n, const Fibo& fib) { return fib > n; }
-    friend Number operator>(Number n, const Fibo& fib) { return fib < n; }
-    friend Number operator<=(Number n, const Fibo& fib) { return fib >= n; }
-    friend Number operator>=(Number n, const Fibo& fib) { return fib <= n; }
-    friend Number operator==(Number n, const Fibo& fib) { return fib == n; }
-    friend Number operator!=(Number n, const Fibo& fib) { return fib != n; }
+    friend bool operator==(const Fibo& a, const Fibo& b) {
+        if (&a == &b) return true;
+        
+        if (a.bits_.size() != b.bits_.size()) return false;
+            
+        return equal(a.bits_.begin(), a.bits_.end(), b.bits_.begin());
+    }
+        
+    friend bool operator<(const Fibo& a, const Fibo& b) {
+        if (&a == &b) return false;
+
+        if (a.bits_.size() < b.bits_.size()) return true;
+            
+        auto diff = mismatch(a.bits_.rbegin(), // a pair of iterators
+                                a.bits_.rend(), 
+                                b.bits_.rbegin());
+                
+        if(diff.first == a.bits_.rend()) return false;
+            
+        // a < b if and only if they differ 
+        // where 'b' has a 1 and 'a' has a 0
+        return(*(diff.second)); 
+    }
 };
 
 const Fibo& Zero() {
@@ -292,46 +264,65 @@ const Fibo& Zero() {
 }
 
 const Fibo& One() {
-	static Fibo one("1");
+    static Fibo one("1");
 
-	return one;
+    return one;
 }
-
+   
+bool operator>(const Fibo& a, const Fibo& b) { return b < a; }
+bool operator<=(const Fibo& a, const Fibo& b) { return !(a > b); }
+bool operator>=(const Fibo& a, const Fibo& b) { return !(b < a); }
+bool operator!=(const Fibo& a, const Fibo& b) { return !(b == a); }
+const Fibo operator+(const Fibo& a, const Fibo& b) { return Fibo(a) += b; }
+const Fibo operator|(const Fibo& a, const Fibo& b) { return Fibo(a) |= b; }
+const Fibo operator&(const Fibo& a, const Fibo& b) { return Fibo(a) &= b; }
+const Fibo operator^(const Fibo& a, const Fibo& b) { return Fibo(a) ^= b; }
+    
 #include <cassert>
-
+#include <climits>
 
 int main() {
+    Fibo f;
     
-    Fibo f1;
-    Fibo f2("10000");
-    f1 = f2;
-    
-    Fibo f3(f2);
-    
-    
-    std::cout << f1 << " " << f2 << " " << f3 << std::endl;
-    
-    f1 += f2;
-    std::cout << f1 << std::endl;
-    
-    std::cout << f1 + f2 << std::endl;
-    std::cout << f1 + (f2 + f3) << std::endl;
+    assert(f == Zero());
+    assert(Fibo(f) == Zero());
+    assert(Zero() < One());
+    assert(Fibo("11") == Fibo("100"));
+    assert((Fibo("1001") + Fibo("10")) == Fibo("1011"));
+    assert((Fibo("1001") & Fibo("1100")) == Zero()); // 1100 == 10000
+    assert((Fibo("1100") | Fibo("11")) == Fibo("10100")); // 1100 == 10000, 11 == 100
+    assert((Fibo("1001") ^ Fibo("1010")) == Fibo("11"));
+    assert((Fibo("101") << 3) == Fibo("101000"));
 
-    std::cout << Fibo("1001") + Fibo("10") << std::endl;
-    std::cout << Fibo("1011") << std::endl;
+    f = One();
+    f <<= 3;
+    assert(f == Fibo("1000"));
 
-    assert((Fibo("11") == Fibo("100")));
-    assert(((Fibo("1001") + Fibo("10")) == Fibo("1011")));
+    f = One();
+    assert(f + Fibo("1") == Fibo("10"));
+    assert(f == One());
+
+    Fibo f1("101");
+    Fibo f2 = Fibo("101");
+    assert(f1 == f2);
+
+    assert(Fibo("11").length() == 3); // 11 == 100
+
+    std::cout << Fibo("11") << std::endl; // prints 100
     
-    //Fibo f3(true);
-    //Fibo f4('a');
-    //f1 += "10";
-    //f1 = f2 + "10";
-    //b = "10" < f2;
-
-    f1 += 2;
-    f1 = f2 + 2;
-    b = 2 < f2;
-
-    return 0;
+    Fibo f3(ULONG_LONG_MAX);
+    std::cout << "  " << f3 << std::endl;
+    std::cout << f3 + f3 << std::endl;
+    
+    std::cout << Fibo("101000101000001010") + Fibo("101000101000001010") << std::endl;
+    
+    std::cout << (f3 | f3) << std::endl;
+    std::cout << (f3 & f3) << std::endl;
+    std::cout << (f3 ^ f3) << std::endl;
+    
+    srand(time(NULL));
+    using namespace std;
+    
+    Fibo f22(9876543210LL);
+    cout << f22 << endl;
 }
